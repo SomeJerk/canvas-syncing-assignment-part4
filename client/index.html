@@ -1,13 +1,77 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script src="/socket.io/socket.io.js"></script>
     <script src="https://npmcdn.com/babel-core@5.8.38/browser.min.js"></script>
     <script type="text/babel" >
         "use strict";
-    
+        let canvas;
+        let ctx;
+
+        let socket;
+
+        let sendBufferCanvas;
+        let sendBufferCtx;
+
+        const setup = () => {
+            sendBufferCanvas = document.createElement("canvas");
+            sendBufferCanvas.height = 200;
+            sendBufferCanvas.width = 200;
+            sendBufferCtx = sendBufferCanvas.getContext('2d');
+            
+            ctx.fillRect(100, 100, 200, 200);
+            
+            sendBufferCtx.fillRect(0, 0, 200, 200);
+            
+            const data = {
+                x: 300,
+                y: 300,
+                height: 200,
+                width: 200,
+            };
+            
+            socket.emit('draw', data);
+        };
+
+        const addRect = (inX, inY) => {
+            const data = {
+                x: inX,
+                y: inY,
+                height: 200,
+                width: 200,
+            };
+            
+            socket.emit('draw', data);
+        };
+
+        const handleMessage = (data) => {
+            ctx.save();
+            ctx.globalCompositeOperation = "source-over";
+            ctx.fillRect(data.x, data.y, data.width, data.height);
+        };
+
+        const init = () => {
+            canvas = document.querySelector("#cav");
+            ctx = canvas.getContext('2d');
+            socket = io.connect();
+            
+            socket.on('connect', function () {
+                setup();
+                canvas.addEventListener('click', () => {
+                    const x = Event.clientX;
+                    const y = Event.clientY;
+                    
+                    addRect(x, y);
+                });
+            });
+            
+            socket.on('update', handleMessage);
+        };
+
+        window.onload = init;
     </script>
 </head>
 <body>
-
+    <canvas id="cav" height="500" width="500"></canvas>
 </body>
 </html>
